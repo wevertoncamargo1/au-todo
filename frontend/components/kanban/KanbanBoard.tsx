@@ -9,6 +9,13 @@ import { historyAccess } from '@/lib/history-access';
 import { Task, TaskStatus } from '@/types/task';
 import { KanbanColumn } from './KanbanColumn';
 
+const PRIORITY_ORDER: Record<Task['priority'], number> = {
+  URGENT: 4,
+  HIGH: 3,
+  MEDIUM: 2,
+  LOW: 1,
+};
+
 const COLUMNS: { id: TaskStatus; title: string; color: string }[] = [
   { id: 'TODO', title: 'A fazer', color: 'bg-gray-400' },
   { id: 'IN_PROGRESS', title: 'Em andamento', color: 'bg-amber-400' },
@@ -76,6 +83,16 @@ export function KanbanBoard({ tasks }: Props) {
     cancelMove();
   }
 
+  function sortByPriority(list: Task[]): Task[] {
+    return [...list].sort((a, b) => {
+      const byPriority = PRIORITY_ORDER[b.priority] - PRIORITY_ORDER[a.priority];
+      if (byPriority !== 0) {
+        return byPriority;
+      }
+      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+    });
+  }
+
   return (
     <>
       <DragDropContext onDragEnd={onDragEnd}>
@@ -87,7 +104,7 @@ export function KanbanBoard({ tasks }: Props) {
                 id={col.id}
                 title={col.title}
                 color={col.color}
-                tasks={tasks.filter((t) => t.status === col.id)}
+                tasks={sortByPriority(tasks.filter((t) => t.status === col.id))}
                 onOpenTask={(task) => setSelectedTaskId(task.id)}
               />
             ))}

@@ -17,6 +17,14 @@ const PRIORITY_LABELS: Record<Priority, string> = {
   URGENT: 'Urgente',
 };
 
+function formatDateOnly(value: string | null): string {
+  if (!value) return '-';
+  const dateOnly = value.slice(0, 10);
+  const [year, month, day] = dateOnly.split('-');
+  if (!year || !month || !day) return value;
+  return `${day}/${month}/${year}`;
+}
+
 export function TaskCard({ task, index, onOpenTask }: Props) {
   const { mutate: deleteTask } = useDeleteTask();
 
@@ -55,7 +63,7 @@ export function TaskCard({ task, index, onOpenTask }: Props) {
               {PRIORITY_LABELS[task.priority]}
             </span>
             <span>
-              Prazo: {task.dueDate ? new Date(task.dueDate).toLocaleDateString('pt-BR') : '-'}
+              Prazo: {formatDateOnly(task.dueDate)}
             </span>
           </div>
         </div>
