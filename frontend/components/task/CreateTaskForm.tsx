@@ -4,12 +4,11 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useCreateTask } from '@/hooks/useTasks';
-import { TaskStatus } from '@/types/task';
 
 const schema = z.object({
   title: z.string().min(1, 'Título é obrigatório').max(100),
-  description: z.string().max(500).optional(),
-  status: z.enum(['TODO', 'IN_PROGRESS', 'DONE']).optional(),
+  description: z.string().min(1, 'Descrição é obrigatória').max(500),
+  status: z.enum(['TODO', 'IN_PROGRESS', 'BLOCKED', 'REVIEW', 'DONE']),
 });
 
 type FormData = z.infer<typeof schema>;
@@ -24,10 +23,7 @@ export function CreateTaskForm() {
   } = useForm<FormData>({ resolver: zodResolver(schema) });
 
   function onSubmit(data: FormData) {
-    mutate(
-      { ...data, status: (data.status as TaskStatus) ?? 'TODO' },
-      { onSuccess: () => reset() },
-    );
+    mutate(data, { onSuccess: () => reset() });
   }
 
   return (
@@ -45,10 +41,10 @@ export function CreateTaskForm() {
       </div>
 
       <div className="flex flex-col gap-1">
-        <label className="text-sm font-medium text-gray-700">Descrição</label>
+        <label className="text-sm font-medium text-gray-700">Descrição *</label>
         <textarea
           {...register('description')}
-          placeholder="Descreva a tarefa (opcional)"
+          placeholder="Descreva a tarefa"
           rows={3}
           className="rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-violet-500 focus:ring-2 focus:ring-violet-200 resize-none"
         />
@@ -58,13 +54,15 @@ export function CreateTaskForm() {
       </div>
 
       <div className="flex flex-col gap-1">
-        <label className="text-sm font-medium text-gray-700">Status inicial</label>
+        <label className="text-sm font-medium text-gray-700">Status inicial *</label>
         <select
           {...register('status')}
           className="rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-violet-500 focus:ring-2 focus:ring-violet-200 bg-white"
         >
           <option value="TODO">A fazer</option>
           <option value="IN_PROGRESS">Em andamento</option>
+          <option value="BLOCKED">Bloqueado</option>
+          <option value="REVIEW">Review</option>
           <option value="DONE">Concluído</option>
         </select>
       </div>
