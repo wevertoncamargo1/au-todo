@@ -72,7 +72,8 @@ export function KanbanBoard({ tasks }: Props) {
   return (
     <>
       <DragDropContext onDragEnd={onDragEnd}>
-        <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-5">
+        <div className="overflow-x-auto pb-2">
+          <div className="flex gap-4 xl:grid xl:grid-cols-5" style={{ minWidth: '900px' }}>
           {COLUMNS.map((col) => (
             <KanbanColumn
               key={col.id}
@@ -82,6 +83,7 @@ export function KanbanBoard({ tasks }: Props) {
               tasks={tasks.filter((t) => t.status === col.id)}
             />
           ))}
+          </div>
         </div>
       </DragDropContext>
 

@@ -13,7 +13,7 @@ interface Props {
 
 export function KanbanColumn({ id, title, color, tasks }: Props) {
   return (
-    <div className="flex flex-col gap-3 min-w-0">
+    <div className="flex flex-col gap-3 min-w-[200px] xl:min-w-0 flex-1">
       <div className={`flex items-center gap-2 px-1`}>
         <span className={`h-3 w-3 rounded-full ${color}`} />
         <h2 className="text-sm font-semibold text-gray-700 uppercase tracking-wide">
