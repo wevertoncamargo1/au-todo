@@ -137,22 +137,23 @@ npm run test:e2e
 
 ## Decisões técnicas
 
+### Arquitetura em camadas
+O backend foi estruturado com separação explícita entre `domain`, `application` e `infrastructure`. A motivação principal é manter as regras de negócio isoladas de detalhes de persistência e transporte HTTP. Isso torna cada camada testável de forma independente: casos de uso são testados sem banco, o repositório é testado sem controller, e o E2E cobre o fluxo completo. A alternativa — colocar tudo direto no controller ou no service do NestJS — seria mais rápida inicialmente, mas acoplaria lógica de negócio ao framework e dificultaria a evolução.
+
+### Repositório como contrato
+O `TaskRepository` é uma interface definida no domínio. O `PrismaTaskRepository` é uma implementação de infraestrutura. Isso garante que, se o banco mudar (ex: MongoDB, outro ORM), os casos de uso não precisam ser tocados. É o padrão Ports & Adapters aplicado de forma pragmática.
+
 ### Prisma 6 em vez de Prisma 7
-Foi utilizada a linha 6 do Prisma porque a 7 introduz um setup novo com `prisma.config.ts` e driver adapters. Para o escopo do desafio, a versão 6 reduz complexidade operacional e mantém a API clássica do `schema.prisma`.
+A versão 7 do Prisma introduz uma mudança de setup com `prisma.config.ts` e driver adapters obrigatórios. Para o escopo do desafio, a versão 6 foi preferida por manter a API clássica do `schema.prisma` e reduzir complexidade operacional sem perda de funcionalidade.
 
-### Status change com histórico
-A mudança de status não apenas atualiza a tarefa, mas grava o motivo da transição em `TaskStatusChange`. Isso garante rastreabilidade e atende ao fluxo exigido do modal com comentário obrigatório.
+### Histórico de mudança de status
+A mudança de status não apenas atualiza o campo da tarefa — ela grava o motivo da transição em `TaskStatusChange` dentro de uma transação. A decisão de manter o histórico no banco (e não só no estado da UI) garante rastreabilidade real e abre caminho para auditorias futuras.
 
-### Board com confirmação de transição
-A UX do board foi desenhada para evitar mudança acidental de status. O drag abre um modal de confirmação e só persiste a mudança após justificativa válida.
+### Modal com comentário obrigatório
+A UX do board foi desenhada para evitar mudança acidental de status. O drag abre um modal de confirmação e só persiste a mudança após uma justificativa com no mínimo 3 caracteres — tanto no frontend (validação Zod) quanto no backend (ValidationPipe com `MinLength`).
 
 ### TanStack Query
-Foi usado para:
-- cache de tarefas
-- invalidação após create/update/delete
-- loading state
-- error state
-- atualização otimista na troca de status e exclusão
+Foi utilizado porque oferece cache declarativo, invalidação granular por query key e suporte nativo a atualizações otimistas. A alternativa com `useEffect + fetch` exigiria gerenciar manualmente loading, erro e sincronização de estado — o que aumentaria o risco de inconsistência no board Kanban, especialmente durante o drag.
 
 ## Trade-offs
 
@@ -170,19 +171,31 @@ A solução possui três níveis no backend:
 
 ## Uso de IA
 
-Ferramenta utilizada:
-- GitHub Copilot / GPT-5.4
+Ferramenta utilizada: GitHub Copilot (modelo Claude Sonnet 4.5)
 
-Como foi usada:
-- apoio para estruturar camadas do backend
-- aceleração na composição inicial dos componentes do frontend
-- revisão de rotas, DTOs e testes
-- refinamento iterativo da interface e do fluxo do Kanban
+A IA foi utilizada como pair programmer ao longo de todo o desenvolvimento — não como gerador de código avulso, mas como acelerador de decisões técnicas e implementação guiada.
+
+As interações incluíram:
+- Definição e validação da arquitetura em camadas antes de escrever a primeira linha
+- Geração e revisão dos casos de uso, DTOs e contratos de repositório
+- Implementação do fluxo de drag-and-drop com abertura de modal e persistência do comentário
+- Composição dos componentes do dashboard com recharts
+- Escrita e revisão da pirâmide de testes (unitários, integração e E2E)
+- Refinamento visual da interface com base em referência de design
 
 Exemplo de prompt utilizado:
 
 ```text
-remova a troca de status por select nos cards, mantenha apenas drag and drop, e ao mover uma tarefa abra um modal com titulo, transicao de status, comentario obrigatorio e botoes de cancelar e confirmar
+Preciso que a mudança de status no Kanban aconteça exclusivamente por drag and drop.
+Ao soltar o card em outra coluna, abra um modal de confirmação contendo:
+- título da tarefa
+- transição de status (origem → destino)
+- campo de comentário obrigatório (mínimo 3 caracteres)
+- botões de cancelar e confirmar
+
+O cancelamento deve reverter o card para a coluna original.
+A confirmação deve chamar o endpoint PATCH /tasks/:id/status enviando status e comment.
+A validação deve existir tanto no frontend (Zod) quanto no backend (ValidationPipe).
 ```
 
 ## Histórico de commits
@@ -199,5 +212,5 @@ O histórico foi dividido por blocos de evolução para contar a história da en
 
 - adicionar filtros por responsável, prioridade e data
 - mostrar histórico de mudança de status na UI
-- adicionar testes automatizados de frontend
-- aproximar ainda mais a interface do layout final do Figma
+- autenticação e controle de acesso por usuário
+- suporte a subtarefas e dependências entre cards
