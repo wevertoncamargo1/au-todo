@@ -6,12 +6,16 @@ import { Task } from '@/types/task';
 const COLORS: Record<string, string> = {
   TODO: '#9ca3af',
   IN_PROGRESS: '#fbbf24',
+  BLOCKED: '#fb7185',
+  REVIEW: '#22d3ee',
   DONE: '#34d399',
 };
 
 const LABELS: Record<string, string> = {
   TODO: 'A fazer',
   IN_PROGRESS: 'Em andamento',
+  BLOCKED: 'Bloqueado',
+  REVIEW: 'Review',
   DONE: 'Concluído',
 };
 
@@ -20,7 +24,7 @@ interface Props {
 }
 
 export function StatusChart({ tasks }: Props) {
-  const data = ['TODO', 'IN_PROGRESS', 'DONE']
+  const data = ['TODO', 'IN_PROGRESS', 'BLOCKED', 'REVIEW', 'DONE']
     .map((status) => ({
       name: LABELS[status],
       value: tasks.filter((t) => t.status === status).length,
