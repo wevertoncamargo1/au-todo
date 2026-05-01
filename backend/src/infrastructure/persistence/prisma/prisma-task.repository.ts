@@ -1,6 +1,11 @@
 import { Injectable } from '@nestjs/common';
+import { Priority } from '../../../domain/task/priority.enum';
 import { Task } from '../../../domain/task/task.entity';
-import { type TaskRepository } from '../../../domain/task/task.repository';
+import {
+  type TaskHistoryEvent,
+  type TaskRepository,
+  type UpdateTaskDetailsInput,
+} from '../../../domain/task/task.repository';
 import { TaskStatus } from '../../../domain/task/task-status.enum';
 import { PrismaService } from './prisma.service';
 
@@ -13,6 +18,8 @@ export class PrismaTaskRepository implements TaskRepository {
     title: string;
     description: string | null;
     status: string;
+    priority: string;
+    dueDate: Date | null;
     createdAt: Date;
     updatedAt: Date;
   }): Task {
@@ -21,6 +28,8 @@ export class PrismaTaskRepository implements TaskRepository {
       record.title,
       record.description,
       record.status as TaskStatus,
+      record.priority as Priority,
+      record.dueDate,
       record.createdAt,
       record.updatedAt,
     );
@@ -33,6 +42,8 @@ export class PrismaTaskRepository implements TaskRepository {
         title: task.title,
         description: task.description,
         status: task.status,
+        priority: task.priority,
+        dueDate: task.dueDate,
       },
     });
     return this.toDomain(record);
@@ -72,6 +83,98 @@ export class PrismaTaskRepository implements TaskRepository {
     });
 
     return this.toDomain(record);
+  }
+
+  async updateDetails(id: string, input: UpdateTaskDetailsInput): Promise<Task> {
+    const record = await this.prisma.$transaction(async (tx) => {
+      const current = await tx.task.findUniqueOrThrow({ where: { id } });
+
+      const updated = await tx.task.update({
+        where: { id },
+        data: {
+          title: input.title,
+          description: input.description,
+          priority: input.priority,
+          dueDate: input.dueDate,
+        },
+      });
+
+      const changes: { field: string; oldValue: string | null; newValue: string | null }[] = [];
+
+      if (current.title !== input.title) {
+        changes.push({ field: 'title', oldValue: current.title, newValue: input.title });
+      }
+      if ((current.description ?? '') !== input.description) {
+        changes.push({
+          field: 'description',
+          oldValue: current.description,
+          newValue: input.description,
+        });
+      }
+      if ((current.priority as Priority) !== input.priority) {
+        changes.push({
+          field: 'priority',
+          oldValue: current.priority,
+          newValue: input.priority,
+        });
+      }
+      if (current.dueDate?.toISOString() !== input.dueDate.toISOString()) {
+        changes.push({
+          field: 'dueDate',
+          oldValue: current.dueDate?.toISOString() ?? null,
+          newValue: input.dueDate.toISOString(),
+        });
+      }
+
+      if (changes.length > 0) {
+        await tx.taskFieldChange.createMany({
+          data: changes.map((change) => ({
+            taskId: id,
+            field: change.field,
+            oldValue: change.oldValue,
+            newValue: change.newValue,
+          })),
+        });
+      }
+
+      return updated;
+    });
+
+    return this.toDomain(record);
+  }
+
+  async listHistory(id: string): Promise<TaskHistoryEvent[]> {
+    const [statusChanges, fieldChanges] = await Promise.all([
+      this.prisma.taskStatusChange.findMany({
+        where: { taskId: id },
+        orderBy: { createdAt: 'desc' },
+      }),
+      this.prisma.taskFieldChange.findMany({
+        where: { taskId: id },
+        orderBy: { createdAt: 'desc' },
+      }),
+    ]);
+
+    return [
+      ...statusChanges.map((s) => ({
+        id: s.id,
+        type: 'STATUS' as const,
+        field: 'status',
+        oldValue: s.fromStatus,
+        newValue: s.toStatus,
+        comment: s.comment,
+        createdAt: s.createdAt,
+      })),
+      ...fieldChanges.map((f) => ({
+        id: f.id,
+        type: 'FIELD' as const,
+        field: f.field,
+        oldValue: f.oldValue,
+        newValue: f.newValue,
+        comment: null,
+        createdAt: f.createdAt,
+      })),
+    ].sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
   }
 
   async delete(id: string): Promise<void> {

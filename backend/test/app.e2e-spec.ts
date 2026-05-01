@@ -21,11 +21,13 @@ describe('Tasks flow (e2e)', () => {
   });
 
   beforeEach(async () => {
+    await prisma.taskFieldChange.deleteMany();
     await prisma.taskStatusChange.deleteMany();
     await prisma.task.deleteMany();
   });
 
   afterAll(async () => {
+    await prisma.taskFieldChange.deleteMany();
     await prisma.taskStatusChange.deleteMany();
     await prisma.task.deleteMany();
     await app.close();
@@ -38,6 +40,8 @@ describe('Tasks flow (e2e)', () => {
         title: 'Tarefa e2e',
         description: 'Criada pelo teste end-to-end',
         status: 'TODO',
+        priority: 'HIGH',
+        dueDate: new Date(Date.now() + 86_400_000).toISOString(),
       })
       .expect(201);
 

@@ -1,5 +1,6 @@
 import { randomUUID } from 'crypto';
 import { Task } from '../../../domain/task/task.entity';
+import { Priority } from '../../../domain/task/priority.enum';
 import { TaskStatus } from '../../../domain/task/task-status.enum';
 import { PrismaTaskRepository } from './prisma-task.repository';
 import { PrismaService } from './prisma.service';
@@ -15,11 +16,13 @@ describe('PrismaTaskRepository integration', () => {
   });
 
   beforeEach(async () => {
+    await prisma.taskFieldChange.deleteMany();
     await prisma.taskStatusChange.deleteMany();
     await prisma.task.deleteMany();
   });
 
   afterAll(async () => {
+    await prisma.taskFieldChange.deleteMany();
     await prisma.taskStatusChange.deleteMany();
     await prisma.task.deleteMany();
     await prisma.$disconnect();
@@ -31,6 +34,8 @@ describe('PrismaTaskRepository integration', () => {
       'Primeira',
       'Descricao 1',
       TaskStatus.TODO,
+      Priority.MEDIUM,
+      new Date(Date.now() + 86_400_000),
       new Date(Date.now() - 10_000),
       new Date(Date.now() - 10_000),
     );
@@ -39,6 +44,8 @@ describe('PrismaTaskRepository integration', () => {
       'Segunda',
       'Descricao 2',
       TaskStatus.REVIEW,
+      Priority.HIGH,
+      new Date(Date.now() + 172_800_000),
       new Date(),
       new Date(),
     );
@@ -59,6 +66,8 @@ describe('PrismaTaskRepository integration', () => {
       'Mover tarefa',
       'Descricao',
       TaskStatus.TODO,
+      Priority.MEDIUM,
+      new Date(Date.now() + 86_400_000),
       new Date(),
       new Date(),
     );

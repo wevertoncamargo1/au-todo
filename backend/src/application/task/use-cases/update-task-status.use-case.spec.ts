@@ -1,5 +1,6 @@
 import { NotFoundException } from '@nestjs/common';
 import { Task } from '../../../domain/task/task.entity';
+import { Priority } from '../../../domain/task/priority.enum';
 import { TaskStatus } from '../../../domain/task/task-status.enum';
 import { TaskRepository } from '../../../domain/task/task.repository';
 import { UpdateTaskStatusUseCase } from './update-task-status.use-case';
@@ -9,6 +10,8 @@ const mockRepo: jest.Mocked<TaskRepository> = {
   findAll: jest.fn(),
   findById: jest.fn(),
   updateStatus: jest.fn(),
+  updateDetails: jest.fn(),
+  listHistory: jest.fn(),
   delete: jest.fn(),
 };
 
@@ -21,8 +24,26 @@ describe('UpdateTaskStatusUseCase', () => {
   });
 
   it('should update task status', async () => {
-    const task = new Task('1', 'Task', null, TaskStatus.TODO, new Date(), new Date());
-    const updated = new Task('1', 'Task', null, TaskStatus.DONE, new Date(), new Date());
+    const task = new Task(
+      '1',
+      'Task',
+      null,
+      TaskStatus.TODO,
+      Priority.MEDIUM,
+      null,
+      new Date(),
+      new Date(),
+    );
+    const updated = new Task(
+      '1',
+      'Task',
+      null,
+      TaskStatus.DONE,
+      Priority.MEDIUM,
+      null,
+      new Date(),
+      new Date(),
+    );
     mockRepo.findById.mockResolvedValue(task);
     mockRepo.updateStatus.mockResolvedValue(updated);
 

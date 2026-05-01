@@ -8,13 +8,16 @@ datasource db {
 }
 
 model Task {
-  id          String     @id @default(uuid())
-  title       String
-  description String?
-  status      TaskStatus @default(TODO)
-  statusChanges TaskStatusChange[]
-  createdAt   DateTime   @default(now())
-  updatedAt   DateTime   @updatedAt
+  id           String     @id @default(uuid())
+  title        String
+  description  String?
+  status       TaskStatus @default(TODO)
+  priority     Priority   @default(MEDIUM)
+  dueDate      DateTime?
+  statusChanges  TaskStatusChange[]
+  fieldChanges   TaskFieldChange[]
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
 }
 
 model TaskStatusChange {
@@ -29,10 +32,29 @@ model TaskStatusChange {
   @@index([taskId])
 }
 
+model TaskFieldChange {
+  id        String   @id @default(uuid())
+  taskId    String
+  field     String
+  oldValue  String?
+  newValue  String?
+  createdAt DateTime @default(now())
+  task      Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+
+  @@index([taskId])
+}
+
 enum TaskStatus {
   TODO
   IN_PROGRESS
   BLOCKED
   REVIEW
   DONE
+}
+
+enum Priority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
 }

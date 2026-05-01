@@ -2,7 +2,6 @@ import { Inject, Injectable } from '@nestjs/common';
 import { randomUUID } from 'crypto';
 import { Task } from '../../../domain/task/task.entity';
 import { TASK_REPOSITORY, type TaskRepository } from '../../../domain/task/task.repository';
-import { TaskStatus } from '../../../domain/task/task-status.enum';
 import { CreateTaskDto } from '../dtos/task.dto';
 
 @Injectable()
@@ -18,6 +17,8 @@ export class CreateTaskUseCase {
       dto.title,
       dto.description,
       dto.status,
+      dto.priority,
+      new Date(dto.dueDate),
       new Date(),
       new Date(),
     );
