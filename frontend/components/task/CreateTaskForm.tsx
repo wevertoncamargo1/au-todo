@@ -9,6 +9,8 @@ const schema = z.object({
   title: z.string().min(1, 'Título é obrigatório').max(100),
   description: z.string().min(1, 'Descrição é obrigatória').max(500),
   status: z.enum(['TODO', 'IN_PROGRESS', 'BLOCKED', 'REVIEW', 'DONE']),
+  priority: z.enum(['LOW', 'MEDIUM', 'HIGH', 'URGENT']),
+  dueDate: z.string().min(1, 'Data limite é obrigatória'),
 });
 
 type FormData = z.infer<typeof schema>;
@@ -50,6 +52,35 @@ export function CreateTaskForm() {
         />
         {errors.description && (
           <span className="text-xs text-red-500">{errors.description.message}</span>
+        )}
+      </div>
+
+      <div className="flex flex-col gap-1">
+        <label className="text-sm font-medium text-gray-700">Prioridade *</label>
+        <select
+          {...register('priority')}
+          className="rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-violet-500 focus:ring-2 focus:ring-violet-200 bg-white"
+          defaultValue="MEDIUM"
+        >
+          <option value="LOW">Baixa</option>
+          <option value="MEDIUM">Média</option>
+          <option value="HIGH">Alta</option>
+          <option value="URGENT">Urgente</option>
+        </select>
+        {errors.priority && (
+          <span className="text-xs text-red-500">{errors.priority.message}</span>
+        )}
+      </div>
+
+      <div className="flex flex-col gap-1">
+        <label className="text-sm font-medium text-gray-700">Data limite *</label>
+        <input
+          type="date"
+          {...register('dueDate')}
+          className="rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-violet-500 focus:ring-2 focus:ring-violet-200"
+        />
+        {errors.dueDate && (
+          <span className="text-xs text-red-500">{errors.dueDate.message}</span>
         )}
       </div>
 

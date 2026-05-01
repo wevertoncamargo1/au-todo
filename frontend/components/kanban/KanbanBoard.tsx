@@ -3,6 +3,9 @@
 import { DragDropContext, DropResult } from '@hello-pangea/dnd';
 import { useState } from 'react';
 import { useUpdateTaskStatus } from '@/hooks/useTasks';
+import { EditTaskModal } from '@/components/task/EditTaskModal';
+import { TaskHistoryModal } from '@/components/task/TaskHistoryModal';
+import { historyAccess } from '@/lib/history-access';
 import { Task, TaskStatus } from '@/types/task';
 import { KanbanColumn } from './KanbanColumn';
 
@@ -28,6 +31,9 @@ interface Props {
 
 export function KanbanBoard({ tasks }: Props) {
   const { mutate: updateStatus } = useUpdateTaskStatus();
+  const viewer = null;
+  const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
+  const [historyTaskId, setHistoryTaskId] = useState<string | null>(null);
   const [pendingMove, setPendingMove] = useState<{
     taskId: string;
     title: string;
@@ -35,6 +41,7 @@ export function KanbanBoard({ tasks }: Props) {
     toStatus: TaskStatus;
   } | null>(null);
   const [comment, setComment] = useState('');
+  const selectedTask = tasks.find((t) => t.id === selectedTaskId) ?? null;
 
   function onDragEnd(result: DropResult) {
     if (!result.destination) return;
@@ -74,18 +81,43 @@ export function KanbanBoard({ tasks }: Props) {
       <DragDropContext onDragEnd={onDragEnd}>
         <div className="overflow-x-auto pb-2">
           <div className="flex gap-4 xl:grid xl:grid-cols-5" style={{ minWidth: '900px' }}>
-          {COLUMNS.map((col) => (
-            <KanbanColumn
-              key={col.id}
-              id={col.id}
-              title={col.title}
-              color={col.color}
-              tasks={tasks.filter((t) => t.status === col.id)}
-            />
-          ))}
+            {COLUMNS.map((col) => (
+              <KanbanColumn
+                key={col.id}
+                id={col.id}
+                title={col.title}
+                color={col.color}
+                tasks={tasks.filter((t) => t.status === col.id)}
+                onOpenTask={(task) => setSelectedTaskId(task.id)}
+              />
+            ))}
           </div>
         </div>
       </DragDropContext>
+
+      {selectedTask && (
+        <EditTaskModal
+          task={selectedTask}
+          canOpenHistory={historyAccess.canViewTaskHistory({
+            viewer,
+            taskId: selectedTask.id,
+          })}
+          onClose={() => setSelectedTaskId(null)}
+          onOpenHistory={() => {
+            setHistoryTaskId(selectedTask.id);
+            setSelectedTaskId(null);
+          }}
+        />
+      )}
+
+      {historyTaskId && (
+        <TaskHistoryModal
+          taskId={historyTaskId}
+          onClose={() => {
+            setHistoryTaskId(null);
+          }}
+        />
+      )}
 
       {pendingMove && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/45 p-4">

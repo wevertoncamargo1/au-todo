@@ -9,9 +9,10 @@ interface Props {
   title: string;
   color: string;
   tasks: Task[];
+  onOpenTask: (task: Task) => void;
 }
 
-export function KanbanColumn({ id, title, color, tasks }: Props) {
+export function KanbanColumn({ id, title, color, tasks, onOpenTask }: Props) {
   return (
     <div className="flex flex-col gap-3 min-w-[200px] xl:min-w-0 flex-1">
       <div className={`flex items-center gap-2 px-1`}>
@@ -34,7 +35,7 @@ export function KanbanColumn({ id, title, color, tasks }: Props) {
             }`}
           >
             {tasks.map((task, index) => (
-              <TaskCard key={task.id} task={task} index={index} />
+              <TaskCard key={task.id} task={task} index={index} onOpenTask={onOpenTask} />
             ))}
             {provided.placeholder}
           </div>

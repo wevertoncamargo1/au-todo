@@ -1,6 +1,12 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import api from '@/lib/api';
-import { CreateTaskInput, Task, UpdateTaskStatusInput } from '@/types/task';
+import {
+  CreateTaskInput,
+  Task,
+  TaskHistoryEvent,
+  UpdateTaskDetailsInput,
+  UpdateTaskStatusInput,
+} from '@/types/task';
 
 export function useTasks() {
   return useQuery<Task[]>({
@@ -74,5 +80,60 @@ export function useDeleteTask() {
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ['tasks'] });
     },
+  });
+}
+
+export function useUpdateTaskDetails() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, title, description, priority, dueDate }: UpdateTaskDetailsInput) => {
+      const { data } = await api.patch<Task>(`/tasks/${id}`, {
+        title,
+        description,
+        priority,
+        dueDate,
+      });
+      return data;
+    },
+    onMutate: async ({ id, title, description, priority, dueDate }) => {
+      await queryClient.cancelQueries({ queryKey: ['tasks'] });
+      const previous = queryClient.getQueryData<Task[]>(['tasks']);
+      queryClient.setQueryData<Task[]>(['tasks'], (old) =>
+        old
+          ? old.map((t) =>
+              t.id === id
+                ? {
+                    ...t,
+                    title,
+                    description,
+                    priority,
+                    dueDate,
+                  }
+                : t,
+            )
+          : [],
+      );
+      return { previous };
+    },
+    onError: (_err, _vars, ctx) => {
+      if (ctx?.previous) {
+        queryClient.setQueryData(['tasks'], ctx.previous);
+      }
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ['tasks'] });
+    },
+  });
+}
+
+export function useTaskHistory(taskId: string, enabled: boolean) {
+  return useQuery<TaskHistoryEvent[]>({
+    queryKey: ['task-history', taskId],
+    queryFn: async () => {
+      const { data } = await api.get<TaskHistoryEvent[]>(`/tasks/${taskId}/history`);
+      return data;
+    },
+    enabled,
+    staleTime: 10_000,
   });
 }
