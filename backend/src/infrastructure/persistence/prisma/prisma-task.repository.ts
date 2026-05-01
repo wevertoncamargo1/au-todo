@@ -13,6 +13,10 @@ import { PrismaService } from './prisma.service';
 export class PrismaTaskRepository implements TaskRepository {
   constructor(private readonly prisma: PrismaService) {}
 
+  private toDateOnlyValue(date: Date | null): string | null {
+    return date ? date.toISOString().slice(0, 10) : null;
+  }
+
   private toDomain(record: {
     id: string;
     title: string;
@@ -118,11 +122,14 @@ export class PrismaTaskRepository implements TaskRepository {
           newValue: input.priority,
         });
       }
-      if (current.dueDate?.toISOString() !== input.dueDate.toISOString()) {
+      const oldDueDate = this.toDateOnlyValue(current.dueDate);
+      const newDueDate = this.toDateOnlyValue(input.dueDate);
+
+      if (oldDueDate !== newDueDate) {
         changes.push({
           field: 'dueDate',
-          oldValue: current.dueDate?.toISOString() ?? null,
-          newValue: input.dueDate.toISOString(),
+          oldValue: oldDueDate,
+          newValue: newDueDate,
         });
       }
 

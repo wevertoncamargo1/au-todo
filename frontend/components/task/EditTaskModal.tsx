@@ -58,7 +58,7 @@ export function EditTaskModal({ task, canOpenHistory, onClose, onOpenHistory }: 
         title: data.title,
         description: data.description,
         priority: data.priority,
-        dueDate: new Date(data.dueDate).toISOString(),
+        dueDate: data.dueDate,
       },
       { onSuccess: onClose },
     );

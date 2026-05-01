@@ -15,6 +15,47 @@ const FIELD_LABELS: Record<string, string> = {
   status: 'Status',
 };
 
+const PRIORITY_LABELS: Record<string, string> = {
+  LOW: 'Baixa',
+  MEDIUM: 'Média',
+  HIGH: 'Alta',
+  URGENT: 'Urgente',
+};
+
+const STATUS_LABELS: Record<string, string> = {
+  TODO: 'A fazer',
+  IN_PROGRESS: 'Em andamento',
+  BLOCKED: 'Bloqueado',
+  REVIEW: 'Review',
+  DONE: 'Concluído',
+};
+
+function formatDateOnly(value: string): string {
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) {
+    return value;
+  }
+  return parsed.toLocaleDateString('pt-BR');
+}
+
+function formatHistoryValue(field: string, value: string | null): string {
+  if (!value) return '-';
+
+  if (field === 'priority') {
+    return PRIORITY_LABELS[value] ?? value;
+  }
+
+  if (field === 'status') {
+    return STATUS_LABELS[value] ?? value;
+  }
+
+  if (field === 'dueDate') {
+    return formatDateOnly(value);
+  }
+
+  return value;
+}
+
 export function TaskHistoryModal({ taskId, onClose }: Props) {
   const { data = [], isLoading } = useTaskHistory(taskId, true);
 
@@ -45,7 +86,7 @@ export function TaskHistoryModal({ taskId, onClose }: Props) {
                   {event.type === 'STATUS' ? 'Mudança de status' : 'Alteração de campo'}
                 </p>
                 <span className="text-xs text-gray-500">
-                  {new Date(event.createdAt).toLocaleString('pt-BR')}
+                  {new Date(event.createdAt).toLocaleDateString('pt-BR')}
                 </span>
               </div>
 
@@ -53,10 +94,10 @@ export function TaskHistoryModal({ taskId, onClose }: Props) {
                 <span className="font-medium">Campo:</span> {FIELD_LABELS[event.field] ?? event.field}
               </p>
               <p className="mt-1 text-sm text-gray-700">
-                <span className="font-medium">De:</span> {event.oldValue ?? '-'}
+                <span className="font-medium">De:</span> {formatHistoryValue(event.field, event.oldValue)}
               </p>
               <p className="mt-1 text-sm text-gray-700">
-                <span className="font-medium">Para:</span> {event.newValue ?? '-'}
+                <span className="font-medium">Para:</span> {formatHistoryValue(event.field, event.newValue)}
               </p>
               {event.comment && (
                 <p className="mt-1 text-sm text-gray-700">
