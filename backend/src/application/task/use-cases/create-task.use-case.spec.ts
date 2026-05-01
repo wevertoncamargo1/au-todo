@@ -1,4 +1,3 @@
-import { NotFoundException } from '@nestjs/common';
 import { Task } from '../../../domain/task/task.entity';
 import { TaskStatus } from '../../../domain/task/task-status.enum';
 import { TaskRepository } from '../../../domain/task/task.repository';
@@ -22,7 +21,11 @@ describe('CreateTaskUseCase', () => {
   });
 
   it('should create a task with TODO status by default', async () => {
-    const dto: CreateTaskDto = { title: 'My task' };
+    const dto: CreateTaskDto = {
+      title: 'My task',
+      description: 'My task details',
+      status: TaskStatus.TODO,
+    };
     const saved = new Task('uuid', 'My task', null, TaskStatus.TODO, new Date(), new Date());
     mockRepo.save.mockResolvedValue(saved);
 
@@ -33,7 +36,11 @@ describe('CreateTaskUseCase', () => {
   });
 
   it('should create a task with custom status', async () => {
-    const dto: CreateTaskDto = { title: 'In progress', status: TaskStatus.IN_PROGRESS };
+    const dto: CreateTaskDto = {
+      title: 'In progress',
+      description: 'In progress details',
+      status: TaskStatus.IN_PROGRESS,
+    };
     const saved = new Task('uuid', 'In progress', null, TaskStatus.IN_PROGRESS, new Date(), new Date());
     mockRepo.save.mockResolvedValue(saved);
 
@@ -43,7 +50,11 @@ describe('CreateTaskUseCase', () => {
   });
 
   it('should pass title and description to repository', async () => {
-    const dto: CreateTaskDto = { title: 'Task', description: 'Details' };
+    const dto: CreateTaskDto = {
+      title: 'Task',
+      description: 'Details',
+      status: TaskStatus.TODO,
+    };
     const saved = new Task('uuid', 'Task', 'Details', TaskStatus.TODO, new Date(), new Date());
     mockRepo.save.mockResolvedValue(saved);
 

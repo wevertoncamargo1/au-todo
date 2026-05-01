@@ -10,11 +10,11 @@ export class UpdateTaskStatusUseCase {
     private readonly taskRepository: TaskRepository,
   ) {}
 
-  async execute(id: string, status: TaskStatus): Promise<Task> {
+  async execute(id: string, status: TaskStatus, comment: string): Promise<Task> {
     const task = await this.taskRepository.findById(id);
     if (!task) {
       throw new NotFoundException(`Task with id "${id}" not found`);
     }
-    return this.taskRepository.updateStatus(id, status);
+    return this.taskRepository.updateStatus(id, status, comment);
   }
 }

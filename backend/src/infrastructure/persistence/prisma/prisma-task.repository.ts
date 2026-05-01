@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { Task } from '../../../domain/task/task.entity';
-import { TaskRepository } from '../../../domain/task/task.repository';
+import { type TaskRepository } from '../../../domain/task/task.repository';
 import { TaskStatus } from '../../../domain/task/task-status.enum';
 import { PrismaService } from './prisma.service';
 
@@ -50,11 +50,27 @@ export class PrismaTaskRepository implements TaskRepository {
     return record ? this.toDomain(record) : null;
   }
 
-  async updateStatus(id: string, status: TaskStatus): Promise<Task> {
-    const record = await this.prisma.task.update({
-      where: { id },
-      data: { status },
+  async updateStatus(id: string, status: TaskStatus, comment: string): Promise<Task> {
+    const record = await this.prisma.$transaction(async (tx) => {
+      const current = await tx.task.findUniqueOrThrow({ where: { id } });
+
+      const updated = await tx.task.update({
+        where: { id },
+        data: { status },
+      });
+
+      await tx.taskStatusChange.create({
+        data: {
+          taskId: id,
+          fromStatus: current.status as TaskStatus,
+          toStatus: status,
+          comment,
+        },
+      });
+
+      return updated;
     });
+
     return this.toDomain(record);
   }
 

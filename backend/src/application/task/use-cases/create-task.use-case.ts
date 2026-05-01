@@ -16,8 +16,8 @@ export class CreateTaskUseCase {
     const task = new Task(
       randomUUID(),
       dto.title,
-      dto.description ?? null,
-      dto.status ?? TaskStatus.TODO,
+      dto.description,
+      dto.status,
       new Date(),
       new Date(),
     );

@@ -26,16 +26,16 @@ describe('UpdateTaskStatusUseCase', () => {
     mockRepo.findById.mockResolvedValue(task);
     mockRepo.updateStatus.mockResolvedValue(updated);
 
-    const result = await useCase.execute('1', TaskStatus.DONE);
+    const result = await useCase.execute('1', TaskStatus.DONE, 'Finalizado com sucesso');
 
     expect(result.status).toBe(TaskStatus.DONE);
-    expect(mockRepo.updateStatus).toHaveBeenCalledWith('1', TaskStatus.DONE);
+    expect(mockRepo.updateStatus).toHaveBeenCalledWith('1', TaskStatus.DONE, 'Finalizado com sucesso');
   });
 
   it('should throw NotFoundException when task does not exist', async () => {
     mockRepo.findById.mockResolvedValue(null);
 
-    await expect(useCase.execute('non-existent', TaskStatus.DONE)).rejects.toThrow(
+    await expect(useCase.execute('non-existent', TaskStatus.DONE, 'Nao encontrado')).rejects.toThrow(
       NotFoundException,
     );
     expect(mockRepo.updateStatus).not.toHaveBeenCalled();

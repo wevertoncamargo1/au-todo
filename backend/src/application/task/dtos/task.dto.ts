@@ -1,4 +1,4 @@
-import { IsEnum, IsNotEmpty, IsOptional, IsString } from 'class-validator';
+import { IsEnum, IsNotEmpty, IsString, MinLength } from 'class-validator';
 import { TaskStatus } from '../../../domain/task/task-status.enum';
 
 export class CreateTaskDto {
@@ -7,16 +7,20 @@ export class CreateTaskDto {
   title: string;
 
   @IsString()
-  @IsOptional()
-  description?: string;
+  @IsNotEmpty()
+  description: string;
 
   @IsEnum(TaskStatus)
-  @IsOptional()
-  status?: TaskStatus;
+  status: TaskStatus;
 }
 
 export class UpdateTaskStatusDto {
   @IsEnum(TaskStatus)
   @IsNotEmpty()
   status: TaskStatus;
+
+  @IsString()
+  @MinLength(3)
+  @IsNotEmpty()
+  comment: string;
 }

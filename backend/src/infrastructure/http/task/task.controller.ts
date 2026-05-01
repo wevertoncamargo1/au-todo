@@ -35,7 +35,7 @@ export class TaskController {
 
   @Patch(':id/status')
   updateStatus(@Param('id') id: string, @Body() dto: UpdateTaskStatusDto) {
-    return this.updateTaskStatus.execute(id, dto.status);
+    return this.updateTaskStatus.execute(id, dto.status, dto.comment);
   }
 
   @Delete(':id')

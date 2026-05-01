@@ -12,12 +12,27 @@ model Task {
   title       String
   description String?
   status      TaskStatus @default(TODO)
+  statusChanges TaskStatusChange[]
   createdAt   DateTime   @default(now())
   updatedAt   DateTime   @updatedAt
+}
+
+model TaskStatusChange {
+  id          String     @id @default(uuid())
+  taskId       String
+  fromStatus   TaskStatus
+  toStatus     TaskStatus
+  comment      String
+  createdAt    DateTime   @default(now())
+  task         Task       @relation(fields: [taskId], references: [id], onDelete: Cascade)
+
+  @@index([taskId])
 }
 
 enum TaskStatus {
   TODO
   IN_PROGRESS
+  BLOCKED
+  REVIEW
   DONE
 }
