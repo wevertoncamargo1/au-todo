@@ -1,0 +1,81 @@
+'use client';
+
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
+import { useCreateTask } from '@/hooks/useTasks';
+import { TaskStatus } from '@/types/task';
+
+const schema = z.object({
+  title: z.string().min(1, 'Título é obrigatório').max(100),
+  description: z.string().max(500).optional(),
+  status: z.enum(['TODO', 'IN_PROGRESS', 'DONE']).optional(),
+});
+
+type FormData = z.infer<typeof schema>;
+
+export function CreateTaskForm() {
+  const { mutate, isPending } = useCreateTask();
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors },
+  } = useForm<FormData>({ resolver: zodResolver(schema) });
+
+  function onSubmit(data: FormData) {
+    mutate(
+      { ...data, status: (data.status as TaskStatus) ?? 'TODO' },
+      { onSuccess: () => reset() },
+    );
+  }
+
+  return (
+    <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-3">
+      <div className="flex flex-col gap-1">
+        <label className="text-sm font-medium text-gray-700">Título *</label>
+        <input
+          {...register('title')}
+          placeholder="Digite o título da tarefa"
+          className="rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-violet-500 focus:ring-2 focus:ring-violet-200"
+        />
+        {errors.title && (
+          <span className="text-xs text-red-500">{errors.title.message}</span>
+        )}
+      </div>
+
+      <div className="flex flex-col gap-1">
+        <label className="text-sm font-medium text-gray-700">Descrição</label>
+        <textarea
+          {...register('description')}
+          placeholder="Descreva a tarefa (opcional)"
+          rows={3}
+          className="rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-violet-500 focus:ring-2 focus:ring-violet-200 resize-none"
+        />
+        {errors.description && (
+          <span className="text-xs text-red-500">{errors.description.message}</span>
+        )}
+      </div>
+
+      <div className="flex flex-col gap-1">
+        <label className="text-sm font-medium text-gray-700">Status inicial</label>
+        <select
+          {...register('status')}
+          className="rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-violet-500 focus:ring-2 focus:ring-violet-200 bg-white"
+        >
+          <option value="TODO">A fazer</option>
+          <option value="IN_PROGRESS">Em andamento</option>
+          <option value="DONE">Concluído</option>
+        </select>
+      </div>
+
+      <button
+        type="submit"
+        disabled={isPending}
+        className="mt-1 rounded-lg bg-violet-600 px-4 py-2 text-sm font-semibold text-white hover:bg-violet-700 disabled:opacity-60 transition-colors"
+      >
+        {isPending ? 'Criando...' : 'Criar tarefa'}
+      </button>
+    </form>
+  );
+}
