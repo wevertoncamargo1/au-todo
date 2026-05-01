@@ -1,4 +1,4 @@
-export type TaskStatus = 'TODO' | 'IN_PROGRESS' | 'DONE';
+export type TaskStatus = 'TODO' | 'IN_PROGRESS' | 'BLOCKED' | 'REVIEW' | 'DONE';
 
 export interface Task {
   id: string;
@@ -11,6 +11,12 @@ export interface Task {
 
 export interface CreateTaskInput {
   title: string;
-  description?: string;
-  status?: TaskStatus;
+  description: string;
+  status: TaskStatus;
+}
+
+export interface UpdateTaskStatusInput {
+  id: string;
+  status: TaskStatus;
+  comment: string;
 }

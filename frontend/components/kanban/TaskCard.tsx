@@ -1,14 +1,8 @@
 'use client';
 
 import { Draggable } from '@hello-pangea/dnd';
-import { useDeleteTask, useUpdateTaskStatus } from '@/hooks/useTasks';
-import { Task, TaskStatus } from '@/types/task';
-
-const STATUS_OPTIONS: { value: TaskStatus; label: string }[] = [
-  { value: 'TODO', label: 'A fazer' },
-  { value: 'IN_PROGRESS', label: 'Em andamento' },
-  { value: 'DONE', label: 'Concluído' },
-];
+import { useDeleteTask } from '@/hooks/useTasks';
+import { Task } from '@/types/task';
 
 interface Props {
   task: Task;
@@ -16,7 +10,6 @@ interface Props {
 }
 
 export function TaskCard({ task, index }: Props) {
-  const { mutate: updateStatus } = useUpdateTaskStatus();
   const { mutate: deleteTask } = useDeleteTask();
 
   return (
@@ -44,21 +37,6 @@ export function TaskCard({ task, index }: Props) {
           {task.description && (
             <p className="text-xs text-gray-500 leading-relaxed">{task.description}</p>
           )}
-
-          <select
-            value={task.status}
-            onChange={(e) =>
-              updateStatus({ id: task.id, status: e.target.value as TaskStatus })
-            }
-            className="mt-1 rounded-md border border-gray-200 bg-gray-50 px-2 py-1 text-xs text-gray-600 outline-none focus:border-violet-400"
-            onClick={(e) => e.stopPropagation()}
-          >
-            {STATUS_OPTIONS.map((opt) => (
-              <option key={opt.value} value={opt.value}>
-                {opt.label}
-              </option>
-            ))}
-          </select>
         </div>
       )}
     </Draggable>

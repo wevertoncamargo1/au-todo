@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import api from '@/lib/api';
-import { CreateTaskInput, Task, TaskStatus } from '@/types/task';
+import { CreateTaskInput, Task, UpdateTaskStatusInput } from '@/types/task';
 
 export function useTasks() {
   return useQuery<Task[]>({
@@ -29,8 +29,8 @@ export function useCreateTask() {
 export function useUpdateTaskStatus() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async ({ id, status }: { id: string; status: TaskStatus }) => {
-      const { data } = await api.patch<Task>(`/tasks/${id}/status`, { status });
+    mutationFn: async ({ id, status, comment }: UpdateTaskStatusInput) => {
+      const { data } = await api.patch<Task>(`/tasks/${id}/status`, { status, comment });
       return data;
     },
     onMutate: async ({ id, status }) => {
