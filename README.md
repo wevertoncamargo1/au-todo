@@ -34,6 +34,8 @@ Essa estrutura prioriza separação de responsabilidades e reduz acoplamento ent
 - Alteração de status apenas por drag and drop
 - Modal de confirmação ao mover tarefa com comentário obrigatório
 - Persistência do comentário e histórico de mudança de status no banco
+- Edição de tarefa por clique no card (título, descrição, prioridade e data limite)
+- Histórico completo de alterações (status + campos) em modal, com visualização restrita a usuários permissionados
 - Dashboard com:
   - gráfico de distribuição por status
   - cards por coluna
@@ -149,6 +151,9 @@ A versão 7 do Prisma introduz uma mudança de setup com `prisma.config.ts` e dr
 ### Histórico de mudança de status
 A mudança de status não apenas atualiza o campo da tarefa — ela grava o motivo da transição em `TaskStatusChange` dentro de uma transação. A decisão de manter o histórico no banco (e não só no estado da UI) garante rastreabilidade real e abre caminho para auditorias futuras.
 
+### Controle de acesso ao histórico
+O acesso ao histórico foi encapsulado em uma policy dedicada no backend (`TaskHistoryAccessPolicy`) e em uma camada de acesso no frontend (`historyAccess`). Hoje a implementação padrão é permissiva por ainda não existir módulo de autenticação no projeto. Quando autenticação/autorização for adicionada, a regra de negócio passa a liberar o histórico apenas para usuários permissionados sem necessidade de reescrever controllers, componentes ou casos de uso.
+
 ### Modal com comentário obrigatório
 A UX do board foi desenhada para evitar mudança acidental de status. O drag abre um modal de confirmação e só persiste a mudança após uma justificativa com no mínimo 3 caracteres — tanto no frontend (validação Zod) quanto no backend (ValidationPipe com `MinLength`).
 
@@ -211,6 +216,6 @@ O histórico foi dividido por blocos de evolução para contar a história da en
 ## Melhorias futuras
 
 - adicionar filtros por responsável, prioridade e data
-- mostrar histórico de mudança de status na UI
+- adicionar autenticação e autorização para aplicar permissões reais no histórico
 - autenticação e controle de acesso por usuário
 - suporte a subtarefas e dependências entre cards
