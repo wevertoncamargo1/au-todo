@@ -35,7 +35,10 @@ Essa estrutura prioriza separação de responsabilidades e reduz acoplamento ent
 - Modal de confirmação ao mover tarefa com comentário obrigatório
 - Persistência do comentário e histórico de mudança de status no banco
 - Edição de tarefa por clique no card (título, descrição, prioridade e data limite)
+- Exclusão de tarefa com confirmação em modal ("Você tem certeza?")
 - Histórico completo de alterações (status + campos) em modal, com visualização restrita a usuários permissionados
+- Feedback visual de criação de ticket (toast de sucesso/erro com auto-dismiss)
+- Validação de caracteres em frontend e backend para bloquear emojis e símbolos inválidos em campos textuais
 - Dashboard com:
   - gráfico de distribuição por status
   - cards por coluna
@@ -156,6 +159,9 @@ O acesso ao histórico foi encapsulado em uma policy dedicada no backend (`TaskH
 
 ### Modal com comentário obrigatório
 A UX do board foi desenhada para evitar mudança acidental de status. O drag abre um modal de confirmação e só persiste a mudança após uma justificativa com no mínimo 3 caracteres — tanto no frontend (validação Zod) quanto no backend (ValidationPipe com `MinLength`).
+
+### Validação defensiva de entrada
+Além das validações de tamanho e obrigatoriedade, os campos textuais críticos (título, descrição e comentário de status) possuem validação para rejeitar emojis e caracteres inválidos no frontend e no backend. Isso reduz risco de inconsistência visual, problemas de encoding e entrada de dados não suportados no fluxo atual.
 
 ### TanStack Query
 Foi utilizado porque oferece cache declarativo, invalidação granular por query key e suporte nativo a atualizações otimistas. A alternativa com `useEffect + fetch` exigiria gerenciar manualmente loading, erro e sincronização de estado — o que aumentaria o risco de inconsistência no board Kanban, especialmente durante o drag.
