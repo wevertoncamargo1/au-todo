@@ -1,15 +1,26 @@
 'use client';
 
 import { useEffect, useMemo } from 'react';
+import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { useUpdateTaskDetails } from '@/hooks/useTasks';
+import { useDeleteTask, useUpdateTaskDetails } from '@/hooks/useTasks';
 import { Task } from '@/types/task';
 
+const SAFE_TEXT_REGEX = /^[\p{L}\p{N}\p{M}\p{P}\p{Zs}\n\r]+$/u;
+
 const schema = z.object({
-  title: z.string().min(1, 'Título é obrigatório').max(100),
-  description: z.string().min(1, 'Descrição é obrigatória').max(500),
+  title: z
+    .string()
+    .min(1, 'Título é obrigatório')
+    .max(100)
+    .regex(SAFE_TEXT_REGEX, 'Título contém caracteres inválidos.'),
+  description: z
+    .string()
+    .min(1, 'Descrição é obrigatória')
+    .max(500)
+    .regex(SAFE_TEXT_REGEX, 'Descrição contém caracteres inválidos.'),
   priority: z.enum(['LOW', 'MEDIUM', 'HIGH', 'URGENT']),
   dueDate: z.string().min(1, 'Data limite é obrigatória'),
 });
@@ -25,6 +36,8 @@ interface Props {
 
 export function EditTaskModal({ task, canOpenHistory, onClose, onOpenHistory }: Props) {
   const { mutate, isPending } = useUpdateTaskDetails();
+  const { mutate: deleteTask, isPending: isDeleting } = useDeleteTask();
+  const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
   const defaultDate = useMemo(() => task.dueDate?.slice(0, 10) ?? '', [task.dueDate]);
 
   const {
@@ -62,6 +75,10 @@ export function EditTaskModal({ task, canOpenHistory, onClose, onOpenHistory }: 
       },
       { onSuccess: onClose },
     );
+  }
+
+  function onDelete() {
+    deleteTask(task.id, { onSuccess: onClose });
   }
 
   return (
@@ -124,6 +141,31 @@ export function EditTaskModal({ task, canOpenHistory, onClose, onOpenHistory }: 
           <div className="mt-5 flex flex-wrap justify-end gap-2">
             <button
               type="button"
+              onClick={() => setConfirmDeleteOpen(true)}
+              disabled={isDeleting || isPending}
+              className="mr-auto inline-flex items-center gap-2 rounded-lg border border-rose-200 bg-rose-50 px-4 py-2 text-sm font-semibold text-rose-700 hover:bg-rose-100 disabled:cursor-not-allowed disabled:opacity-60"
+              title="Excluir tarefa"
+            >
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <polyline points="3 6 5 6 21 6" />
+                <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
+                <path d="M10 11v6" />
+                <path d="M14 11v6" />
+                <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" />
+              </svg>
+              Excluir
+            </button>
+            <button
+              type="button"
               onClick={onOpenHistory}
               disabled={!canOpenHistory}
               className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
@@ -146,6 +188,35 @@ export function EditTaskModal({ task, canOpenHistory, onClose, onOpenHistory }: 
             </button>
           </div>
         </form>
+
+        {confirmDeleteOpen && (
+          <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/45 p-4">
+            <div className="w-full max-w-sm rounded-2xl bg-white p-5 shadow-2xl">
+              <h4 className="text-base font-semibold text-gray-900">Você tem certeza?</h4>
+              <p className="mt-2 text-sm text-gray-600">
+                Esta ação vai excluir a tarefa permanentemente e não pode ser desfeita.
+              </p>
+
+              <div className="mt-5 flex justify-end gap-2">
+                <button
+                  type="button"
+                  onClick={() => setConfirmDeleteOpen(false)}
+                  className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="button"
+                  onClick={onDelete}
+                  disabled={isDeleting}
+                  className="rounded-lg bg-rose-600 px-4 py-2 text-sm font-semibold text-white hover:bg-rose-700 disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  {isDeleting ? 'Excluindo...' : 'Sim, excluir'}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

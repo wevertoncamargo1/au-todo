@@ -9,6 +9,8 @@ import { historyAccess } from '@/lib/history-access';
 import { Task, TaskStatus } from '@/types/task';
 import { KanbanColumn } from './KanbanColumn';
 
+const SAFE_TEXT_REGEX = /^[\p{L}\p{N}\p{M}\p{P}\p{Zs}\n\r]+$/u;
+
 const PRIORITY_ORDER: Record<Task['priority'], number> = {
   URGENT: 4,
   HIGH: 3,
@@ -48,6 +50,8 @@ export function KanbanBoard({ tasks }: Props) {
     toStatus: TaskStatus;
   } | null>(null);
   const [comment, setComment] = useState('');
+  const trimmedComment = comment.trim();
+  const hasInvalidCommentChars = trimmedComment.length > 0 && !SAFE_TEXT_REGEX.test(trimmedComment);
   const selectedTask = tasks.find((t) => t.id === selectedTaskId) ?? null;
 
   function onDragEnd(result: DropResult) {
@@ -72,12 +76,12 @@ export function KanbanBoard({ tasks }: Props) {
   }
 
   function confirmMove() {
-    if (!pendingMove || comment.trim().length < 3) return;
+    if (!pendingMove || trimmedComment.length < 3 || hasInvalidCommentChars) return;
 
     updateStatus({
       id: pendingMove.taskId,
       status: pendingMove.toStatus,
-      comment: comment.trim(),
+      comment: trimmedComment,
     });
 
     cancelMove();
@@ -162,6 +166,9 @@ export function KanbanBoard({ tasks }: Props) {
                 className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-violet-500 focus:ring-2 focus:ring-violet-200"
               />
               <p className="mt-1 text-xs text-gray-500">Mínimo de 3 caracteres.</p>
+              {hasInvalidCommentChars && (
+                <p className="mt-1 text-xs text-red-500">Comentário contém caracteres inválidos.</p>
+              )}
             </div>
 
             <div className="mt-5 flex justify-end gap-2">
@@ -173,7 +180,7 @@ export function KanbanBoard({ tasks }: Props) {
               </button>
               <button
                 onClick={confirmMove}
-                disabled={comment.trim().length < 3}
+                disabled={trimmedComment.length < 3 || hasInvalidCommentChars}
                 className="rounded-lg bg-violet-600 px-4 py-2 text-sm font-semibold text-white hover:bg-violet-700 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Confirmar mudança

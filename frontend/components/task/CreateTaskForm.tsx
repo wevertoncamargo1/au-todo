@@ -1,13 +1,24 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useCreateTask } from '@/hooks/useTasks';
 
+const SAFE_TEXT_REGEX = /^[\p{L}\p{N}\p{M}\p{P}\p{Zs}\n\r]+$/u;
+
 const schema = z.object({
-  title: z.string().min(1, 'Título é obrigatório').max(100),
-  description: z.string().min(1, 'Descrição é obrigatória').max(500),
+  title: z
+    .string()
+    .min(1, 'Título é obrigatório')
+    .max(100)
+    .regex(SAFE_TEXT_REGEX, 'Título contém caracteres inválidos.'),
+  description: z
+    .string()
+    .min(1, 'Descrição é obrigatória')
+    .max(500)
+    .regex(SAFE_TEXT_REGEX, 'Descrição contém caracteres inválidos.'),
   status: z.enum(['TODO', 'IN_PROGRESS', 'BLOCKED', 'REVIEW', 'DONE']),
   priority: z.enum(['LOW', 'MEDIUM', 'HIGH', 'URGENT']),
   dueDate: z.string().min(1, 'Data limite é obrigatória'),
@@ -15,8 +26,14 @@ const schema = z.object({
 
 type FormData = z.infer<typeof schema>;
 
+type Feedback = {
+  type: 'success' | 'error';
+  message: string;
+};
+
 export function CreateTaskForm() {
   const { mutate, isPending } = useCreateTask();
+  const [feedback, setFeedback] = useState<Feedback | null>(null);
   const {
     register,
     handleSubmit,
@@ -24,12 +41,42 @@ export function CreateTaskForm() {
     formState: { errors },
   } = useForm<FormData>({ resolver: zodResolver(schema) });
 
+  useEffect(() => {
+    if (!feedback) return;
+    const timer = setTimeout(() => {
+      setFeedback(null);
+    }, 2600);
+    return () => clearTimeout(timer);
+  }, [feedback]);
+
   function onSubmit(data: FormData) {
-    mutate(data, { onSuccess: () => reset() });
+    mutate(data, {
+      onSuccess: () => {
+        reset();
+        setFeedback({ type: 'success', message: 'Ticket criado com sucesso.' });
+      },
+      onError: () => {
+        setFeedback({ type: 'error', message: 'Falha ao criar ticket. Tente novamente.' });
+      },
+    });
   }
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-3">
+    <>
+      {feedback && (
+        <div
+          className={`fixed bottom-4 left-4 z-[80] rounded-lg border px-3 py-2 text-sm shadow-lg transition-opacity ${
+            feedback.type === 'success'
+              ? 'border-emerald-200 bg-emerald-50 text-emerald-700'
+              : 'border-rose-200 bg-rose-50 text-rose-700'
+          }`}
+        >
+          {feedback.message}
+        </div>
+      )}
+
+      <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-3">
+
       <div className="flex flex-col gap-1">
         <label className="text-sm font-medium text-gray-700">Título *</label>
         <input
@@ -105,6 +152,7 @@ export function CreateTaskForm() {
       >
         {isPending ? 'Criando...' : 'Criar tarefa'}
       </button>
-    </form>
+      </form>
+    </>
   );
 }
