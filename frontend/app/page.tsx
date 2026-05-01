@@ -65,6 +65,22 @@ function IconCheckCircle() {
     </svg>
   );
 }
+function IconBlock() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="12" cy="12" r="10" />
+      <line x1="4.93" y1="4.93" x2="19.07" y2="19.07" />
+    </svg>
+  );
+}
+function IconReview() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+      <circle cx="12" cy="12" r="3" />
+    </svg>
+  );
+}
 
 type Screen = 'new-task' | 'board' | 'dashboard';
 
@@ -155,7 +171,7 @@ export default function Home() {
         {!isLoading && !isError && screen === 'dashboard' && (
           <section className="space-y-5">
             {/* Metric cards */}
-            <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
+            <div className="grid grid-cols-2 gap-4 md:grid-cols-3 xl:grid-cols-6">
               {[
                 {
                   label: 'Total de Cards',
@@ -180,6 +196,22 @@ export default function Home() {
                   iconBg: 'bg-orange-50',
                   iconColor: 'text-orange-400',
                   icon: <IconTrend />,
+                },
+                {
+                  label: 'Bloqueado',
+                  sublabel: 'Impedido de avançar',
+                  value: countsByStatus.BLOCKED,
+                  iconBg: 'bg-rose-50',
+                  iconColor: 'text-rose-400',
+                  icon: <IconBlock />,
+                },
+                {
+                  label: 'Review',
+                  sublabel: 'Aguardando revisão',
+                  value: countsByStatus.REVIEW,
+                  iconBg: 'bg-cyan-50',
+                  iconColor: 'text-cyan-400',
+                  icon: <IconReview />,
                 },
                 {
                   label: 'Concluídos',
